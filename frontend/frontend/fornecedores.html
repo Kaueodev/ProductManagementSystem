@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fornecedores — GestProd</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/css/custom.css"/>
+</head>
+<body>
+
+<div id="sidebar-placeholder"></div>
+
+<div class="app-wrapper">
+  <div class="main-content">
+
+    <!-- ── Top Bar ──────────────────────────────────── -->
+    <header class="topbar">
+      <div>
+        <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+        <span class="topbar-title" style="margin-left:8px">Fornecedores</span>
+        <div class="topbar-subtitle">Gerencie seus parceiros e fornecedores</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-primary-custom" onclick="abrirModal()">
+          + Novo Fornecedor
+        </button>
+      </div>
+    </header>
+
+    <!-- ── Content ─────────────────────────────────── -->
+    <main class="page-content">
+
+      <!-- Card principal -->
+      <div class="card-custom animate-in">
+        <div class="card-header-custom">
+          <h5>🏭 Lista de Fornecedores</h5>
+          <div class="d-flex gap-2 align-items-center flex-wrap">
+            <!-- Busca -->
+            <div class="search-bar">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="searchInput" placeholder="Buscar fornecedor..."
+                onkeyup="filtrarTabela()"/>
+            </div>
+            <!-- Filtro status -->
+            <select id="filtroStatus" class="form-control-custom" style="width:130px;padding:8px 12px"
+              onchange="filtrarTabela()">
+              <option value="">Todos</option>
+              <option value="ativo">Ativos</option>
+              <option value="inativo">Inativos</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Nome</th>
+                <th>CNPJ</th>
+                <th>Contato (E-mail)</th>
+                <th>Telefone</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaFornecedores">
+              <tr><td colspan="7">
+                <div class="empty-state">
+                  <div class="empty-icon">⏳</div>
+                  <h6>Carregando...</h6>
+                </div>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Rodapé da tabela -->
+        <div style="padding:14px 18px;border-top:1px solid var(--border);
+          display:flex;align-items:center;justify-content:space-between;
+          font-size:13px;color:var(--text-muted)">
+          <span id="contagemLabel">0 fornecedores</span>
+          <span style="color:var(--emerald);font-weight:600" id="contagemAtivos"></span>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ────── Modal: Novo / Editar Fornecedor ─────────── -->
+<div class="modal fade modal-custom" id="modalFornecedor" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitulo">Novo Fornecedor</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:22px">
+        <!-- TODO: POST /api/fornecedores ou PUT /api/fornecedores/:id -->
+        <form id="formFornecedor" novalidate>
+          <input type="hidden" id="fornecedorId"/>
+          <div class="row">
+            <div class="col-md-8">
+              <div class="form-group">
+                <label class="form-label-custom">Nome da empresa <span style="color:var(--danger)">*</span></label>
+                <input type="text" id="fNome" class="form-control-custom" placeholder="Ex.: Distribuidora Norte Ltda"/>
+                <span class="form-error" id="fNomeError">Informe o nome da empresa.</span>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="form-label-custom">CNPJ <span style="color:var(--danger)">*</span></label>
+                <input type="text" id="fCnpj" class="form-control-custom" placeholder="00.000.000/0001-00"
+                  maxlength="18" oninput="mascaraCnpj(this)"/>
+                <span class="form-error" id="fCnpjError">CNPJ inválido.</span>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-7">
+              <div class="form-group">
+                <label class="form-label-custom">E-mail de contato <span style="color:var(--danger)">*</span></label>
+                <input type="email" id="fContato" class="form-control-custom" placeholder="contato@empresa.com"/>
+                <span class="form-error" id="fContatoError">E-mail inválido.</span>
+              </div>
+            </div>
+            <div class="col-md-5">
+              <div class="form-group">
+                <label class="form-label-custom">Telefone</label>
+                <input type="tel" id="fTelefone" class="form-control-custom" placeholder="(00) 9 0000-0000"
+                  maxlength="16" oninput="mascaraTelefone(this)"/>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label-custom">Status</label>
+            <div class="d-flex gap-3 mt-1">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px">
+                <input type="radio" name="fStatus" value="ativo" checked
+                  style="accent-color:var(--emerald);width:16px;height:16px"/>
+                <span class="badge-custom active">Ativo</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px">
+                <input type="radio" name="fStatus" value="inativo"
+                  style="accent-color:var(--danger);width:16px;height:16px"/>
+                <span class="badge-custom danger">Inativo</span>
+              </label>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary-custom" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn-primary-custom" id="btnSalvarFornecedor" onclick="salvarFornecedor()">
+          💾 Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Confirmar Delete -->
+<div class="modal fade modal-custom" id="modalDelete" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">⚠️ Confirmar exclusão</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:18px 22px">
+        <p style="font-size:14px;color:var(--text-muted);margin:0">
+          Deseja realmente excluir o fornecedor <strong id="deleteNome"></strong>?
+          Esta ação não pode ser desfeita.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary-custom" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn-primary-custom" id="btnConfirmarDelete"
+          style="background:var(--danger)" onclick="confirmarDelete()">
+          🗑 Excluir
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/cesta.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script>
+  /* PÁGINA PRIVADA */
+  Auth.requireAuth();
+
+  // ── Estado local ──────────────────────────────────
+  // Em produção, buscar via ApiFornecedores.listar()
+  let fornecedores = [...MockData.fornecedores];
+  let deleteId     = null;
+
+  // ── Render da tabela ──────────────────────────────
+  function renderTabela(dados) {
+    const tbody = document.getElementById('tabelaFornecedores');
+
+    if (!dados.length) {
+      tbody.innerHTML = `<tr><td colspan="7">
+        <div class="empty-state">
+          <div class="empty-icon">🏭</div>
+          <h6>Nenhum fornecedor encontrado</h6>
+          <p style="font-size:13px">Clique em "+ Novo Fornecedor" para começar.</p>
+        </div></td></tr>`;
+    } else {
+      tbody.innerHTML = dados.map(f => `
+        <tr data-id="${f.id}" data-nome="${f.nome.toLowerCase()}" data-status="${f.status}">
+          <td style="color:var(--text-muted);font-size:12px">#${f.id}</td>
+          <td><strong>${f.nome}</strong></td>
+          <td style="font-family:monospace;font-size:13px">${f.cnpj}</td>
+          <td>${f.contato}</td>
+          <td>${f.telefone || '—'}</td>
+          <td>
+            <span class="badge-custom ${f.status === 'ativo' ? 'active' : 'danger'}">
+              ${f.status === 'ativo' ? '● Ativo' : '○ Inativo'}
+            </span>
+          </td>
+          <td>
+            <div class="table-actions">
+              <button class="btn-icon edit" title="Editar" onclick="editarFornecedor(${f.id})">✏️</button>
+              <button class="btn-icon del"  title="Excluir" onclick="abrirDelete(${f.id}, '${f.nome}')">🗑️</button>
+            </div>
+          </td>
+        </tr>`).join('');
+    }
+
+    document.getElementById('contagemLabel').textContent  = `${dados.length} fornecedor(es)`;
+    document.getElementById('contagemAtivos').textContent = `${dados.filter(f => f.status === 'ativo').length} ativos`;
+  }
+
+  // ── Filtro ────────────────────────────────────────
+  function filtrarTabela() {
+    const q      = document.getElementById('searchInput').value.toLowerCase();
+    const status = document.getElementById('filtroStatus').value;
+    const filtrado = fornecedores.filter(f => {
+      const matchQ = !q || f.nome.toLowerCase().includes(q) || f.cnpj.includes(q) || f.contato.toLowerCase().includes(q);
+      const matchS = !status || f.status === status;
+      return matchQ && matchS;
+    });
+    renderTabela(filtrado);
+  }
+
+  // ── Modal novo/editar ─────────────────────────────
+  function abrirModal(fornecedor = null) {
+    document.getElementById('formFornecedor').reset();
+    document.getElementById('fornecedorId').value = '';
+    ['fNomeError','fCnpjError','fContatoError'].forEach(id =>
+      document.getElementById(id).style.display = 'none');
+
+    if (fornecedor) {
+      document.getElementById('modalTitulo').textContent = '✏️ Editar Fornecedor';
+      document.getElementById('fornecedorId').value = fornecedor.id;
+      document.getElementById('fNome').value        = fornecedor.nome;
+      document.getElementById('fCnpj').value        = fornecedor.cnpj;
+      document.getElementById('fContato').value     = fornecedor.contato;
+      document.getElementById('fTelefone').value    = fornecedor.telefone || '';
+      document.querySelector(`input[name="fStatus"][value="${fornecedor.status}"]`).checked = true;
+    } else {
+      document.getElementById('modalTitulo').textContent = '🏭 Novo Fornecedor';
+    }
+    new bootstrap.Modal(document.getElementById('modalFornecedor')).show();
+  }
+
+  function editarFornecedor(id) {
+    const f = fornecedores.find(f => f.id === id);
+    if (f) abrirModal(f);
+  }
+
+  // ── Salvar (AJAX) ─────────────────────────────────
+  async function salvarFornecedor() {
+    const id      = document.getElementById('fornecedorId').value;
+    const nome    = document.getElementById('fNome').value.trim();
+    const cnpj    = document.getElementById('fCnpj').value.trim();
+    const contato = document.getElementById('fContato').value.trim();
+    const tel     = document.getElementById('fTelefone').value.trim();
+    const status  = document.querySelector('input[name="fStatus"]:checked').value;
+    let valid = true;
+
+    document.getElementById('fNomeError').style.display    = 'none';
+    document.getElementById('fCnpjError').style.display    = 'none';
+    document.getElementById('fContatoError').style.display = 'none';
+
+    if (!nome) { document.getElementById('fNomeError').style.display    = 'block'; valid = false; }
+    if (!cnpj || cnpj.length < 14) { document.getElementById('fCnpjError').style.display = 'block'; valid = false; }
+    if (!contato || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contato)) {
+      document.getElementById('fContatoError').style.display = 'block'; valid = false;
+    }
+    if (!valid) return;
+
+    const btn = document.getElementById('btnSalvarFornecedor');
+    btn.innerHTML = '<span class="spinner"></span>';
+    btn.disabled  = true;
+
+    const dados = { nome, cnpj, contato, telefone: tel, status };
+
+    try {
+      /*
+       * TODO (backend real — AJAX):
+       * if (id) {
+       *   const atualizado = await ApiFornecedores.atualizar(id, dados);
+       * } else {
+       *   const novo = await ApiFornecedores.criar(dados);
+       * }
+       * // Backend: INSERT INTO fornecedores / UPDATE fornecedores
+       * // Retorna o registro atualizado, front atualiza tabela sem recarregar
+       */
+
+      // ── Simulação ──────────────────────────────────
+      await new Promise(r => setTimeout(r, 600));
+      if (id) {
+        const idx = fornecedores.findIndex(f => f.id == id);
+        fornecedores[idx] = { ...fornecedores[idx], ...dados };
+      } else {
+        const newId = Math.max(...fornecedores.map(f => f.id), 0) + 1;
+        fornecedores.push({ id: newId, ...dados });
+      }
+      // ───────────────────────────────────────────────
+
+      bootstrap.Modal.getInstance(document.getElementById('modalFornecedor')).hide();
+      renderTabela(fornecedores);
+      showToast(id ? 'Fornecedor atualizado!' : 'Fornecedor cadastrado com sucesso!');
+
+    } catch (err) {
+      showToast(err.message || 'Erro ao salvar.', 'error');
+    } finally {
+      btn.innerHTML = '💾 Salvar';
+      btn.disabled  = false;
+    }
+  }
+
+  // ── Delete ────────────────────────────────────────
+  function abrirDelete(id, nome) {
+    deleteId = id;
+    document.getElementById('deleteNome').textContent = nome;
+    new bootstrap.Modal(document.getElementById('modalDelete')).show();
+  }
+
+  async function confirmarDelete() {
+    const btn = document.getElementById('btnConfirmarDelete');
+    btn.innerHTML = '<span class="spinner"></span>';
+    btn.disabled  = true;
+
+    try {
+      /*
+       * TODO (backend real):
+       * await ApiFornecedores.deletar(deleteId);
+       * // Backend: DELETE FROM fornecedores WHERE id = ?
+       */
+      await new Promise(r => setTimeout(r, 500));
+      fornecedores = fornecedores.filter(f => f.id !== deleteId);
+      // ───────────────────────────────────────────────
+
+      bootstrap.Modal.getInstance(document.getElementById('modalDelete')).hide();
+      renderTabela(fornecedores);
+      showToast('Fornecedor excluído.');
+
+    } catch (err) {
+      showToast(err.message || 'Erro ao excluir.', 'error');
+    } finally {
+      btn.innerHTML = '🗑 Excluir';
+      btn.disabled  = false;
+      deleteId = null;
+    }
+  }
+
+  // ── Máscaras ──────────────────────────────────────
+  function mascaraCnpj(el) {
+    let v = el.value.replace(/\D/g, '').slice(0, 14);
+    v = v.replace(/^(\d{2})(\d)/, '$1.$2');
+    v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+    v = v.replace(/\.(\d{3})(\d)/, '.$1/$2');
+    v = v.replace(/(\d{4})(\d)/, '$1-$2');
+    el.value = v;
+  }
+
+  function mascaraTelefone(el) {
+    let v = el.value.replace(/\D/g, '').slice(0, 11);
+    v = v.replace(/^(\d{2})(\d)/, '($1) $2');
+    v = v.replace(/(\d{5})(\d{4})$/, '$1-$2');
+    el.value = v;
+  }
+
+  // ── Init ──────────────────────────────────────────
+  // TODO: Substituir por await ApiFornecedores.listar();
+  renderTabela(fornecedores);
+</script>
+</body>
+</html>

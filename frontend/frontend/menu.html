@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — GestProd</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/css/custom.css"/>
+  <style>
+    /* Atalho cards do menu */
+    .menu-shortcut {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+      text-decoration: none;
+      transition: all .2s;
+      box-shadow: var(--shadow);
+    }
+    .menu-shortcut:hover {
+      border-color: var(--emerald);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md), 0 0 0 2px rgba(16,185,129,.1);
+    }
+    .menu-shortcut .sc-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+    }
+    .menu-shortcut .sc-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px; font-weight: 700;
+      color: var(--navy);
+    }
+    .menu-shortcut .sc-desc {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+    .menu-shortcut .sc-arrow {
+      margin-top: auto;
+      color: var(--emerald);
+      font-weight: 700;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="sidebar-placeholder"></div>
+
+<div class="app-wrapper">
+  <div class="main-content">
+
+    <!-- ── Top Bar ──────────────────────────────────── -->
+    <header class="topbar">
+      <div>
+        <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+        <span class="topbar-title" style="margin-left:8px">Dashboard</span>
+        <div class="topbar-subtitle" id="topbarDate"></div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-icon" title="Notificações">🔔</button>
+        <button class="btn-secondary-custom" onclick="Auth.logout()">↩ Sair</button>
+      </div>
+    </header>
+
+    <!-- ── Content ─────────────────────────────────── -->
+    <main class="page-content">
+
+      <!-- Banner de boas-vindas -->
+      <div class="welcome-banner animate-in">
+        <div>
+          <h3 id="welcomeMsg">Bem-vindo de volta! 👋</h3>
+          <p>Aqui está um resumo do seu sistema hoje.</p>
+        </div>
+        <a href="produtos.html" class="btn-primary-custom" style="white-space:nowrap">
+          + Novo Produto
+        </a>
+      </div>
+
+      <!-- Cards de estatísticas -->
+      <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+          <div class="stat-card animate-in animate-in-delay-1">
+            <div class="stat-icon green">🏭</div>
+            <div>
+              <div class="stat-number" id="statFornecedores">—</div>
+              <div class="stat-label">Fornecedores</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+          <div class="stat-card animate-in animate-in-delay-2">
+            <div class="stat-icon blue">📦</div>
+            <div>
+              <div class="stat-number" id="statProdutos">—</div>
+              <div class="stat-label">Produtos ativos</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+          <div class="stat-card animate-in animate-in-delay-3">
+            <div class="stat-icon orange">⚠️</div>
+            <div>
+              <div class="stat-number" id="statEstoque">—</div>
+              <div class="stat-label">Sem estoque</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+          <div class="stat-card animate-in animate-in-delay-4">
+            <div class="stat-icon purple">🛒</div>
+            <div>
+              <div class="stat-number" id="statCesta">—</div>
+              <div class="stat-label">Itens na cesta</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Atalhos do menu -->
+      <h6 style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text-muted);
+                 text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">
+        Acesso Rápido
+      </h6>
+      <div class="row g-3 mb-4">
+        <div class="col-md-6 col-xl-3">
+          <a href="fornecedores.html" class="menu-shortcut">
+            <div class="sc-icon" style="background:#d1fae5">🏭</div>
+            <div class="sc-title">Fornecedores</div>
+            <div class="sc-desc">Cadastre e gerencie seus fornecedores e dados de contato.</div>
+            <div class="sc-arrow">Acessar →</div>
+          </a>
+        </div>
+        <div class="col-md-6 col-xl-3">
+          <a href="produtos.html" class="menu-shortcut">
+            <div class="sc-icon" style="background:#dbeafe">📦</div>
+            <div class="sc-title">Produtos</div>
+            <div class="sc-desc">Adicione novos produtos e vincule-os a fornecedores.</div>
+            <div class="sc-arrow">Acessar →</div>
+          </a>
+        </div>
+        <div class="col-md-6 col-xl-3">
+          <a href="listagem_produtos.html" class="menu-shortcut">
+            <div class="sc-icon" style="background:#ede9fe">📋</div>
+            <div class="sc-title">Listagem</div>
+            <div class="sc-desc">Visualize, filtre e exporte todos os produtos cadastrados.</div>
+            <div class="sc-arrow">Acessar →</div>
+          </a>
+        </div>
+        <div class="col-md-6 col-xl-3">
+          <a href="cesta.html" class="menu-shortcut">
+            <div class="sc-icon" style="background:#ffedd5">🛒</div>
+            <div class="sc-title">Cesta</div>
+            <div class="sc-desc">Monte pedidos e calcule totais a partir dos produtos.</div>
+            <div class="sc-arrow">Acessar →</div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Tabela de produtos recentes -->
+      <div class="card-custom animate-in">
+        <div class="card-header-custom">
+          <h5>📦 Produtos Recentes</h5>
+          <a href="listagem_produtos.html" class="btn-secondary-custom" style="font-size:13px">
+            Ver todos →
+          </a>
+        </div>
+        <div class="table-wrapper">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Categoria</th>
+                <th>Fornecedor</th>
+                <th>Preço</th>
+                <th>Estoque</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaRecentes">
+              <tr><td colspan="6">
+                <div class="empty-state" style="padding:30px">
+                  <div class="empty-icon">📦</div>
+                  <h6>Carregando produtos...</h6>
+                </div>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/cesta.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script>
+  /* PÁGINA PRIVADA — requer login */
+  Auth.requireAuth();
+
+  // Atualiza data no topbar
+  document.getElementById('topbarDate').textContent =
+    new Date().toLocaleDateString('pt-BR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+  // Personaliza boas-vindas
+  const user = Auth.getUser();
+  if (user?.nome) {
+    const nome = user.nome.split(' ')[0];
+    document.getElementById('welcomeMsg').textContent = `Olá, ${nome}! 👋`;
+  }
+
+  // Carrega estatísticas e tabela (usando MockData enquanto backend não está pronto)
+  function carregarDashboard() {
+    /*
+     * TODO (backend real):
+     * const fornecedores = await ApiFornecedores.listar();
+     * const produtos      = await ApiProdutos.listar();
+     */
+    const fornecedores = MockData.fornecedores;
+    const produtos     = MockData.produtos;
+    const cesta        = Cesta.getAll();
+
+    document.getElementById('statFornecedores').textContent = fornecedores.filter(f => f.status === 'ativo').length;
+    document.getElementById('statProdutos').textContent     = produtos.filter(p => p.status === 'ativo').length;
+    document.getElementById('statEstoque').textContent      = produtos.filter(p => p.estoque === 0).length;
+    document.getElementById('statCesta').textContent        = Cesta.count();
+
+    // Tabela de recentes (últimos 5)
+    const tbody    = document.getElementById('tabelaRecentes');
+    const recentes = produtos.slice(0, 5);
+
+    if (!recentes.length) {
+      tbody.innerHTML = `<tr><td colspan="6">
+        <div class="empty-state" style="padding:30px">
+          <div class="empty-icon">📦</div>
+          <h6>Nenhum produto cadastrado</h6>
+          <p><a href="produtos.html">Cadastrar agora →</a></p>
+        </div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = recentes.map(p => `
+      <tr>
+        <td><strong>${p.nome}</strong></td>
+        <td><span class="badge-custom info">${p.categoria}</span></td>
+        <td>${p.fornecedor}</td>
+        <td style="font-family:'Syne',sans-serif;font-weight:700">
+          ${Cesta.formataPreco(p.preco)}
+        </td>
+        <td>
+          ${p.estoque === 0
+            ? '<span class="badge-custom danger">Sem estoque</span>'
+            : `<span style="font-weight:600">${p.estoque}</span> un.`}
+        </td>
+        <td>
+          <span class="badge-custom ${p.status === 'ativo' ? 'active' : 'danger'}">
+            ${p.status === 'ativo' ? 'Ativo' : 'Inativo'}
+          </span>
+        </td>
+      </tr>`).join('');
+  }
+
+  carregarDashboard();
+</script>
+</body>
+</html>

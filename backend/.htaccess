@@ -1,0 +1,29 @@
+# backend/.htaccess
+# Permite URL limpa: /api/fornecedores/5 → /api/fornecedores.php
+# com PATH_INFO = /5
+
+Options -Indexes
+
+# Força UTF-8
+AddDefaultCharset UTF-8
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # --- Rota: /api/{recurso}/{id} → /api/{recurso}.php com PATH_INFO=/{id}
+    RewriteRule ^api/([a-z_]+)/([0-9]+)/?$  api/$1.php/$2  [L,QSA]
+
+    # --- Rota: /api/{recurso}  → /api/{recurso}.php
+    RewriteRule ^api/([a-z_]+)/?$           api/$1.php     [L,QSA]
+</IfModule>
+
+# Bloqueia acesso direto à pasta config
+<FilesMatch "^(database|helpers)\.php$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Desabilita listagem de diretórios
+<IfModule mod_autoindex.c>
+    Options -Indexes
+</IfModule>

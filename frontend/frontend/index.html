@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login — GestProd</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/css/custom.css"/>
+</head>
+<body>
+
+<!-- ── Login Page ─────────────────────────────────────── -->
+<div class="login-page">
+  <!-- Background decorativo -->
+  <div class="login-bg-shape" style="width:400px;height:400px;top:-100px;right:-100px;"></div>
+  <div class="login-bg-shape" style="width:250px;height:250px;bottom:-60px;left:-60px;animation-delay:3s"></div>
+
+  <div class="login-card animate-in">
+    <div class="login-card-header">
+      <div class="login-brand-icon">📦</div>
+      <h4>GestProd</h4>
+      <p>Sistema de Gestão de Produtos</p>
+    </div>
+
+    <div class="login-card-body">
+      <p style="text-align:center;color:var(--text-muted);font-size:14px;margin-bottom:24px">
+        Acesse sua conta para continuar
+      </p>
+
+      <!-- Formulário de Login -->
+      <!-- TODO: POST /api/login → { token, user } -->
+      <form id="formLogin" novalidate>
+        <div class="form-group">
+          <label class="form-label-custom" for="email">E-mail</label>
+          <input
+            type="email"
+            id="email"
+            class="form-control-custom"
+            placeholder="seuemail@exemplo.com"
+            required
+          />
+          <span class="form-error" id="emailError">Digite um e-mail válido.</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label-custom" for="senha">Senha</label>
+          <div style="position:relative">
+            <input
+              type="password"
+              id="senha"
+              class="form-control-custom"
+              placeholder="••••••••"
+              required
+            />
+            <button type="button" id="toggleSenha" style="
+              position:absolute;right:12px;top:50%;transform:translateY(-50%);
+              background:none;border:none;cursor:pointer;font-size:16px;color:var(--slate-l)
+            ">👁</button>
+          </div>
+          <span class="form-error" id="senhaError">A senha é obrigatória.</span>
+        </div>
+
+        <!-- Alerta de erro da API -->
+        <div id="loginAlert" style="display:none;background:#fef2f2;border:1px solid #fecaca;
+          color:#991b1b;border-radius:8px;padding:10px 14px;font-size:13.5px;margin-bottom:16px">
+          ❌ <span id="loginAlertMsg">E-mail ou senha incorretos.</span>
+        </div>
+
+        <button type="submit" class="btn-login" id="btnLogin">
+          Entrar na plataforma
+        </button>
+      </form>
+
+      <div class="login-footer-text">
+        Não tem uma conta?
+        <a href="cadastro_usuario.html">Cadastre-se gratuitamente</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/cesta.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script>
+  // Redireciona se já logado
+  Auth.redirectIfLoggedIn('menu.html');
+
+  // Toggle visibilidade da senha
+  document.getElementById('toggleSenha').addEventListener('click', function () {
+    const input = document.getElementById('senha');
+    input.type  = input.type === 'password' ? 'text' : 'password';
+    this.textContent = input.type === 'password' ? '👁' : '🙈';
+  });
+
+  // ── Submit do formulário ─────────────────────────────
+  document.getElementById('formLogin').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const email = document.getElementById('email').value.trim();
+    const senha = document.getElementById('senha').value;
+    let valid   = true;
+
+    // Validações client-side
+    const emailErr = document.getElementById('emailError');
+    const senhaErr = document.getElementById('senhaError');
+    emailErr.style.display = 'none';
+    senhaErr.style.display = 'none';
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      emailErr.style.display = 'block'; valid = false;
+    }
+    if (!senha) {
+      senhaErr.style.display = 'block'; valid = false;
+    }
+    if (!valid) return;
+
+    // Estado de carregamento
+    const btn = document.getElementById('btnLogin');
+    btn.innerHTML = '<span class="spinner"></span> Entrando...';
+    btn.disabled  = true;
+
+    // Esconde alerta anterior
+    document.getElementById('loginAlert').style.display = 'none';
+
+    try {
+      /*
+       * TODO (backend real):
+       * const data = await ApiAuth.login(email, senha);
+       * Auth.login(data.user);
+       * window.location.href = 'menu.html';
+       */
+
+      // ── Simulação de login (remover após integração) ──────
+      await new Promise(r => setTimeout(r, 800)); // simula latência
+
+      if (email === 'admin@gestprod.com' && senha === '123456') {
+        Auth.login({ nome: 'Administrador', email });
+        window.location.href = 'menu.html';
+      } else {
+        throw new Error('Credenciais inválidas');
+      }
+      // ─────────────────────────────────────────────────────
+
+    } catch (err) {
+      document.getElementById('loginAlert').style.display = 'block';
+      document.getElementById('loginAlertMsg').textContent = err.message || 'Erro ao fazer login.';
+    } finally {
+      btn.innerHTML = 'Entrar na plataforma';
+      btn.disabled  = false;
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cadastro de Usuário — GestProd</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/css/custom.css"/>
+</head>
+<body>
+
+<div id="sidebar-placeholder"></div>
+
+<div class="app-wrapper">
+  <div class="main-content">
+
+    <!-- ── Top Bar ──────────────────────────────────── -->
+    <header class="topbar">
+      <div>
+        <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+        <span class="topbar-title" style="margin-left:8px">Cadastro de Usuário</span>
+        <div class="topbar-subtitle">Crie uma nova conta no sistema</div>
+      </div>
+      <div class="topbar-actions">
+        <a href="index.html" class="btn-secondary-custom">← Já tenho conta</a>
+      </div>
+    </header>
+
+    <!-- ── Content ─────────────────────────────────── -->
+    <main class="page-content">
+      <div class="row justify-content-center">
+        <div class="col-xl-7 col-lg-9">
+
+          <!-- Card principal -->
+          <div class="card-custom animate-in">
+            <div class="card-header-custom">
+              <div>
+                <h5>👤 Dados do novo usuário</h5>
+                <p style="font-size:12px;color:var(--text-muted);margin:0;margin-top:2px">
+                  Preencha todos os campos obrigatórios
+                </p>
+              </div>
+              <span class="badge-custom info">Passo 1 de 1</span>
+            </div>
+            <div class="card-body-custom">
+
+              <!-- Formulário -->
+              <!-- TODO: POST /api/usuarios → { id, nome, email } -->
+              <form id="formCadastro" novalidate>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label-custom" for="nome">
+                        Nome completo <span style="color:var(--danger)">*</span>
+                      </label>
+                      <input type="text" id="nome" class="form-control-custom"
+                        placeholder="Ex.: João da Silva" required/>
+                      <span class="form-error" id="nomeError">Informe seu nome completo.</span>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label-custom" for="email">
+                        E-mail <span style="color:var(--danger)">*</span>
+                      </label>
+                      <input type="email" id="email" class="form-control-custom"
+                        placeholder="seuemail@exemplo.com" required/>
+                      <span class="form-error" id="emailError">Digite um e-mail válido.</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label-custom" for="senha">
+                        Senha <span style="color:var(--danger)">*</span>
+                      </label>
+                      <div style="position:relative">
+                        <input type="password" id="senha" class="form-control-custom"
+                          placeholder="Mínimo 6 caracteres" required/>
+                        <button type="button" onclick="togglePwd('senha','toggle1')" id="toggle1"
+                          style="position:absolute;right:12px;top:50%;transform:translateY(-50%);
+                                 background:none;border:none;cursor:pointer;font-size:15px;color:var(--slate-l)">👁</button>
+                      </div>
+                      <span class="form-hint">Use letras, números e caracteres especiais.</span>
+                      <span class="form-error" id="senhaError">A senha deve ter pelo menos 6 caracteres.</span>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label-custom" for="confirmarSenha">
+                        Confirmar senha <span style="color:var(--danger)">*</span>
+                      </label>
+                      <div style="position:relative">
+                        <input type="password" id="confirmarSenha" class="form-control-custom"
+                          placeholder="Repita a senha" required/>
+                        <button type="button" onclick="togglePwd('confirmarSenha','toggle2')" id="toggle2"
+                          style="position:absolute;right:12px;top:50%;transform:translateY(-50%);
+                                 background:none;border:none;cursor:pointer;font-size:15px;color:var(--slate-l)">👁</button>
+                      </div>
+                      <span class="form-error" id="confirmarSenhaError">As senhas não coincidem.</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Indicador de força da senha -->
+                <div class="form-group" id="strengthGroup" style="margin-top:-8px">
+                  <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">
+                    <div id="strengthBar" style="height:100%;width:0;transition:all .3s;border-radius:2px;background:var(--emerald)"></div>
+                  </div>
+                  <span id="strengthLabel" class="form-hint"></span>
+                </div>
+
+                <!-- Alerta de erro geral -->
+                <div id="cadastroAlert" style="display:none;background:#fef2f2;border:1px solid #fecaca;
+                  color:#991b1b;border-radius:8px;padding:10px 14px;font-size:13.5px;margin-bottom:16px">
+                  ❌ <span id="cadastroAlertMsg"></span>
+                </div>
+
+                <!-- Alerta de sucesso -->
+                <div id="cadastroSuccess" style="display:none;background:#d1fae5;border:1px solid #6ee7b7;
+                  color:#065f46;border-radius:8px;padding:10px 14px;font-size:13.5px;margin-bottom:16px">
+                  ✅ Conta criada com sucesso! <a href="index.html" style="color:#065f46;font-weight:600">Fazer login →</a>
+                </div>
+
+                <div class="d-flex gap-3 align-items-center">
+                  <button type="submit" class="btn-primary-custom" id="btnCadastrar">
+                    ✔ Criar conta
+                  </button>
+                  <a href="index.html" class="btn-secondary-custom">Cancelar</a>
+                </div>
+              </form>
+
+            </div>
+          </div><!-- /card -->
+
+        </div>
+      </div>
+    </main>
+
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/cesta.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script>
+  // Toggle senha
+  function togglePwd(inputId, btnId) {
+    const input = document.getElementById(inputId);
+    const btn   = document.getElementById(btnId);
+    input.type  = input.type === 'password' ? 'text' : 'password';
+    btn.textContent = input.type === 'password' ? '👁' : '🙈';
+  }
+
+  // Medidor de força da senha
+  document.getElementById('senha').addEventListener('input', function () {
+    const val = this.value;
+    const bar = document.getElementById('strengthBar');
+    const lbl = document.getElementById('strengthLabel');
+    let score = 0;
+
+    if (val.length >= 6)  score++;
+    if (val.length >= 10) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+
+    const levels = [
+      { pct: '0%',   color: 'var(--border)',   label: '' },
+      { pct: '25%',  color: 'var(--danger)',   label: '🔴 Muito fraca' },
+      { pct: '50%',  color: 'var(--warning)',  label: '🟡 Fraca' },
+      { pct: '75%',  color: '#3b82f6',         label: '🔵 Boa' },
+      { pct: '100%', color: 'var(--emerald)',  label: '🟢 Forte' },
+      { pct: '100%', color: 'var(--emerald)',  label: '🟢 Muito forte' },
+    ];
+    const lvl = levels[Math.min(score, 5)];
+    bar.style.width      = lvl.pct;
+    bar.style.background = lvl.color;
+    lbl.textContent      = val ? lvl.label : '';
+  });
+
+  // ── Submit ─────────────────────────────────────────
+  document.getElementById('formCadastro').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const nome    = document.getElementById('nome').value.trim();
+    const email   = document.getElementById('email').value.trim();
+    const senha   = document.getElementById('senha').value;
+    const conf    = document.getElementById('confirmarSenha').value;
+    let valid     = true;
+
+    // Reset erros
+    ['nomeError','emailError','senhaError','confirmarSenhaError'].forEach(id => {
+      document.getElementById(id).style.display = 'none';
+    });
+
+    if (!nome || nome.length < 3) {
+      document.getElementById('nomeError').style.display = 'block'; valid = false;
+    }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      document.getElementById('emailError').style.display = 'block'; valid = false;
+    }
+    if (!senha || senha.length < 6) {
+      document.getElementById('senhaError').style.display = 'block'; valid = false;
+    }
+    if (senha !== conf) {
+      document.getElementById('confirmarSenhaError').style.display = 'block'; valid = false;
+    }
+    if (!valid) return;
+
+    const btn = document.getElementById('btnCadastrar');
+    btn.innerHTML = '<span class="spinner"></span> Criando conta...';
+    btn.disabled  = true;
+    document.getElementById('cadastroAlert').style.display   = 'none';
+    document.getElementById('cadastroSuccess').style.display = 'none';
+
+    try {
+      /*
+       * TODO (backend real):
+       * await ApiAuth.cadastrar(nome, email, senha);
+       * // Backend fará: validação → hash SHA-256 → INSERT INTO usuarios
+       */
+
+      // ── Simulação (remover após integração) ──────────────
+      await new Promise(r => setTimeout(r, 900));
+      // ────────────────────────────────────────────────────
+
+      document.getElementById('cadastroSuccess').style.display = 'block';
+      this.reset();
+      document.getElementById('strengthBar').style.width = '0';
+      document.getElementById('strengthLabel').textContent = '';
+
+    } catch (err) {
+      document.getElementById('cadastroAlert').style.display = 'block';
+      document.getElementById('cadastroAlertMsg').textContent = err.message || 'Erro ao criar conta.';
+    } finally {
+      btn.innerHTML = '✔ Criar conta';
+      btn.disabled  = false;
+    }
+  });
+</script>
+</body>
+</html>

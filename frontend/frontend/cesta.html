@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cesta — GestProd</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/css/custom.css"/>
+  <style>
+    .cesta-empty {
+      text-align: center;
+      padding: 80px 20px;
+    }
+    .cesta-empty .empty-icon { font-size: 64px; margin-bottom: 16px; opacity: .4; }
+    .cesta-empty h5 {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px; color: var(--navy); margin-bottom: 6px;
+    }
+    .promo-box {
+      background: linear-gradient(135deg, var(--emerald) 0%, var(--emerald-d) 100%);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+    .promo-box .promo-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+    .promo-box .promo-desc  { font-size: 12px; opacity: .85; }
+  </style>
+</head>
+<body>
+
+<div id="sidebar-placeholder"></div>
+
+<div class="app-wrapper">
+  <div class="main-content">
+
+    <!-- ── Top Bar ──────────────────────────────────── -->
+    <header class="topbar">
+      <div>
+        <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+        <span class="topbar-title" style="margin-left:8px">Minha Cesta</span>
+        <div class="topbar-subtitle">Produtos selecionados para pedido</div>
+      </div>
+      <div class="topbar-actions">
+        <a href="listagem_produtos.html" class="btn-secondary-custom">+ Adicionar Produtos</a>
+      </div>
+    </header>
+
+    <!-- ── Content ─────────────────────────────────── -->
+    <main class="page-content">
+
+      <div class="row g-4">
+
+        <!-- Coluna principal: itens da cesta -->
+        <div class="col-lg-8">
+          <div class="card-custom animate-in" id="cardCesta">
+            <div class="card-header-custom">
+              <h5>🛒 Itens da Cesta</h5>
+              <button class="btn-danger-custom" id="btnLimpar" onclick="limparCesta()" style="display:none">
+                🗑 Limpar cesta
+              </button>
+            </div>
+            <div class="card-body-custom" id="cestaBody">
+              <!-- populado pelo JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Coluna lateral: resumo -->
+        <div class="col-lg-4">
+
+          <!-- Box totalizador -->
+          <div class="cesta-total-box animate-in animate-in-delay-1" id="totalBox">
+            <div class="label">Total da cesta</div>
+            <div class="value" id="totalValor">R$ 0,00</div>
+            <div style="display:flex;justify-content:space-between;margin-top:14px;
+                        font-size:12px;opacity:.7;padding-top:12px;border-top:1px solid rgba(255,255,255,.1)">
+              <span>Subtotal:</span>
+              <span id="subtotal">R$ 0,00</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;opacity:.7">
+              <span>Qtd. de itens:</span>
+              <span id="qtdItens">0</span>
+            </div>
+            <button class="btn-login" style="margin-top:18px;border-radius:8px;font-size:14px"
+              id="btnFinalizar" onclick="finalizarPedido()">
+              ✔ Finalizar Pedido
+            </button>
+            <button class="btn-secondary-custom" style="width:100%;justify-content:center;margin-top:8px"
+              onclick="window.location.href='listagem_produtos.html'">
+              Continuar comprando
+            </button>
+          </div>
+
+          <!-- Promo box -->
+          <div class="promo-box animate-in animate-in-delay-2" style="margin-top:16px">
+            <div class="promo-title">💡 Dica do sistema</div>
+            <div class="promo-desc">A cesta é mantida em sessão. Dados não são perdidos ao navegar entre páginas,
+              mas são limpos ao fechar o navegador.</div>
+          </div>
+
+          <!-- Resumo por categoria -->
+          <div class="card-custom animate-in animate-in-delay-3" style="margin-top:16px">
+            <div class="card-header-custom" style="padding:14px 18px">
+              <h5 style="font-size:14px">📊 Por Categoria</h5>
+            </div>
+            <div class="card-body-custom" style="padding:14px 18px" id="resumoCat">
+              <p style="font-size:13px;color:var(--text-muted);margin:0">Nenhum item.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modal confirmar finalizar -->
+<div class="modal fade modal-custom" id="modalFinalizar" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">✅ Confirmar Pedido</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:22px">
+        <p style="font-size:14px;color:var(--text-muted)">Resumo do pedido:</p>
+        <div id="resumoModal"></div>
+        <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:14px;
+                    display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:15px;font-weight:600">Total</span>
+          <span id="totalModal" style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;
+                                       color:var(--emerald)"></span>
+        </div>
+        <div style="background:#d1fae5;border-radius:8px;padding:10px 14px;margin-top:14px;font-size:13px;color:#065f46">
+          ℹ️ <strong>Nota:</strong> Após integração com o backend, este pedido será salvo via
+          <code>POST /api/pedidos</code>. Por ora, apenas a cesta em memória é limpa.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary-custom" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn-primary-custom" onclick="confirmarPedido()">✔ Confirmar Pedido</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/cesta.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script>
+  /* PÁGINA PRIVADA */
+  Auth.requireAuth();
+
+  // ── Render principal ──────────────────────────────
+  function renderCesta() {
+    const itens = Cesta.getAll();
+    const body  = document.getElementById('cestaBody');
+
+    document.getElementById('btnLimpar').style.display = itens.length ? 'flex' : 'none';
+    document.getElementById('btnFinalizar').disabled   = !itens.length;
+
+    if (!itens.length) {
+      body.innerHTML = `
+        <div class="cesta-empty">
+          <div class="empty-icon">🛒</div>
+          <h5>Sua cesta está vazia</h5>
+          <p style="font-size:13.5px;color:var(--text-muted)">
+            Adicione produtos na tela de listagem.
+          </p>
+          <a href="listagem_produtos.html" class="btn-primary-custom" style="margin-top:14px">
+            🔍 Explorar Produtos
+          </a>
+        </div>`;
+      atualizarTotais([]);
+      atualizarResumoCat([]);
+      return;
+    }
+
+    body.innerHTML = itens.map(item => `
+      <div class="cesta-item" id="item-${item.id}">
+        <div class="cesta-thumb">${getEmoji(item.categoria)}</div>
+        <div style="flex:1;min-width:0">
+          <div class="cesta-item-name">${item.nome}</div>
+          <div class="cesta-item-sub">${item.categoria} · ${item.fornecedor}</div>
+        </div>
+        <div class="qty-control">
+          <button class="qty-btn" onclick="alterarQty(${item.id}, ${item.qty - 1})">−</button>
+          <span class="qty-value">${item.qty}</span>
+          <button class="qty-btn" onclick="alterarQty(${item.id}, ${item.qty + 1})">+</button>
+        </div>
+        <div class="cesta-price">${Cesta.formataPreco(item.preco * item.qty)}</div>
+        <button class="btn-icon del" title="Remover" onclick="removerItem(${item.id})">✕</button>
+      </div>`).join('');
+
+    atualizarTotais(itens);
+    atualizarResumoCat(itens);
+  }
+
+  // ── Totais ────────────────────────────────────────
+  function atualizarTotais(itens) {
+    // cesta = [produto1, produto2, ...]
+    // quantidade: cesta.length (ou .reduce para qty)
+    // total: cesta.reduce((soma, p) => soma + p.preco * p.qty, 0)
+    const total = itens.reduce((soma, p) => soma + (p.preco * p.qty), 0);
+    const qty   = itens.reduce((n, p) => n + p.qty, 0);
+
+    document.getElementById('totalValor').textContent = Cesta.formataPreco(total);
+    document.getElementById('subtotal').textContent   = Cesta.formataPreco(total);
+    document.getElementById('qtdItens').textContent   = qty + ' un.';
+  }
+
+  // ── Resumo por categoria ──────────────────────────
+  function atualizarResumoCat(itens) {
+    const div = document.getElementById('resumoCat');
+    if (!itens.length) {
+      div.innerHTML = '<p style="font-size:13px;color:var(--text-muted);margin:0">Nenhum item.</p>';
+      return;
+    }
+
+    const cats = {};
+    itens.forEach(i => {
+      cats[i.categoria] = (cats[i.categoria] || 0) + (i.preco * i.qty);
+    });
+
+    div.innerHTML = Object.entries(cats).map(([cat, val]) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;
+                  padding:7px 0;border-bottom:1px solid var(--border);font-size:13px">
+        <span style="color:var(--text-muted)">${cat}</span>
+        <strong>${Cesta.formataPreco(val)}</strong>
+      </div>`).join('');
+  }
+
+  // ── Ações ─────────────────────────────────────────
+  function alterarQty(id, qty) {
+    Cesta.alterarQty(id, qty);
+    renderCesta();
+  }
+
+  function removerItem(id) {
+    Cesta.remover(id);
+    renderCesta();
+    showToast('Item removido da cesta.');
+  }
+
+  function limparCesta() {
+    if (confirm('Tem certeza que deseja esvaziar a cesta?')) {
+      Cesta.limpar();
+      renderCesta();
+      showToast('Cesta esvaziada.');
+    }
+  }
+
+  // ── Finalizar ─────────────────────────────────────
+  function finalizarPedido() {
+    const itens = Cesta.getAll();
+    if (!itens.length) return;
+
+    document.getElementById('resumoModal').innerHTML = itens.map(i => `
+      <div style="display:flex;justify-content:space-between;font-size:13.5px;padding:6px 0;
+                  border-bottom:1px solid var(--border)">
+        <span>${i.nome} <span style="color:var(--text-muted)">× ${i.qty}</span></span>
+        <strong>${Cesta.formataPreco(i.preco * i.qty)}</strong>
+      </div>`).join('');
+
+    document.getElementById('totalModal').textContent = Cesta.formataPreco(Cesta.total());
+    new bootstrap.Modal(document.getElementById('modalFinalizar')).show();
+  }
+
+  function confirmarPedido() {
+    /*
+     * TODO (backend real):
+     * const pedido = {
+     *   itens: Cesta.getAll(),
+     *   total: Cesta.total(),
+     * };
+     * await apiFetch('/pedidos', { method: 'POST', body: JSON.stringify(pedido) });
+     */
+
+    bootstrap.Modal.getInstance(document.getElementById('modalFinalizar')).hide();
+    Cesta.limpar();
+    renderCesta();
+    showToast('✅ Pedido registrado com sucesso!');
+  }
+
+  // ── Helper emoji ──────────────────────────────────
+  function getEmoji(cat) {
+    const map = { 'Eletrônicos':'🖥️', 'Periféricos':'⌨️', 'Móveis':'🪑', 'Áudio':'🎧' };
+    return map[cat] || '📦';
+  }
+
+  // Reage a mudanças externas (ex.: adicionar produto de outra aba)
+  document.addEventListener('cesta:updated', renderCesta);
+
+  // ── Init ──────────────────────────────────────────
+  renderCesta();
+</script>
+</body>
+</html>

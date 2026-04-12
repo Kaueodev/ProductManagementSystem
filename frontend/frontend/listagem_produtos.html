@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Listagem de Produtos — GestProd</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/css/custom.css"/>
+  <style>
+    .product-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      display: flex; flex-direction: column; gap: 10px;
+      transition: all .2s;
+      box-shadow: var(--shadow);
+    }
+    .product-card:hover {
+      border-color: var(--emerald);
+      box-shadow: var(--shadow-md), 0 0 0 2px rgba(16,185,129,.08);
+      transform: translateY(-2px);
+    }
+    .product-card .pc-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+    }
+    .product-card .pc-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      background: var(--bg); display: flex; align-items: center;
+      justify-content: center; font-size: 20px; flex-shrink: 0;
+    }
+    .product-card .pc-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px; font-weight: 700; color: var(--navy);
+      line-height: 1.3;
+    }
+    .product-card .pc-cat { font-size: 12px; color: var(--text-muted); }
+    .product-card .pc-price {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px; font-weight: 800;
+      color: var(--emerald);
+    }
+    .product-card .pc-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      border-top: 1px solid var(--border); padding-top: 10px;
+    }
+    /* Vista tabela vs grade */
+    #viewTable { display: block; }
+    #viewGrid  { display: none; }
+    body.grid-view #viewTable { display: none; }
+    body.grid-view #viewGrid  { display: block; }
+  </style>
+</head>
+<body>
+
+<div id="sidebar-placeholder"></div>
+
+<div class="app-wrapper">
+  <div class="main-content">
+
+    <!-- ── Top Bar ──────────────────────────────────── -->
+    <header class="topbar">
+      <div>
+        <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+        <span class="topbar-title" style="margin-left:8px">Listagem de Produtos</span>
+        <div class="topbar-subtitle">Consulta e pesquisa avançada</div>
+      </div>
+      <div class="topbar-actions">
+        <!-- Alternar visualização -->
+        <button class="btn-icon" id="btnViewTable" title="Visualização em tabela"
+          onclick="setView('table')" style="background:var(--bg)">☰</button>
+        <button class="btn-icon" id="btnViewGrid"  title="Visualização em grade"
+          onclick="setView('grid')">⊞</button>
+        <a href="produtos.html" class="btn-primary-custom">+ Novo Produto</a>
+      </div>
+    </header>
+
+    <!-- ── Content ─────────────────────────────────── -->
+    <main class="page-content">
+
+      <!-- Filtros avançados -->
+      <div class="card-custom animate-in" style="margin-bottom:20px">
+        <div class="card-body-custom" style="padding:16px 22px">
+          <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+              <label class="form-label-custom" style="font-size:12px">Pesquisar</label>
+              <div class="search-bar" style="width:100%">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="Nome, categoria, fornecedor..."
+                  onkeyup="filtrar()" style="width:100%"/>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label-custom" style="font-size:12px">Categoria</label>
+              <select id="filtroCategoria" class="form-control-custom" onchange="filtrar()">
+                <option value="">Todas</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label-custom" style="font-size:12px">Fornecedor</label>
+              <select id="filtroFornecedor" class="form-control-custom" onchange="filtrar()">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label-custom" style="font-size:12px">Status</label>
+              <select id="filtroStatus" class="form-control-custom" onchange="filtrar()">
+                <option value="">Todos</option>
+                <option value="ativo">Ativo</option>
+                <option value="inativo">Inativo</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <button class="btn-secondary-custom" style="width:100%" onclick="limparFiltros()">
+                ✕ Limpar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resultado / Contador -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <p style="font-size:13.5px;color:var(--text-muted);margin:0">
+          Exibindo <strong id="contagem" style="color:var(--navy)">0</strong> produto(s)
+        </p>
+        <div style="display:flex;gap:8px;align-items:center">
+          <label style="font-size:12px;color:var(--text-muted)">Ordenar por:</label>
+          <select id="ordenar" class="form-control-custom" style="width:150px;padding:7px 10px;font-size:13px"
+            onchange="filtrar()">
+            <option value="nome">Nome A-Z</option>
+            <option value="preco_asc">Menor preço</option>
+            <option value="preco_desc">Maior preço</option>
+            <option value="estoque">Estoque</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ── Vista Tabela ─────────────────────────── -->
+      <div id="viewTable">
+        <div class="card-custom animate-in">
+          <div class="table-wrapper">
+            <table class="table-custom">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Produto</th>
+                  <th>Categoria</th>
+                  <th>Fornecedor</th>
+                  <th>Preço</th>
+                  <th>Estoque</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaCorpo"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Vista Grade ──────────────────────────── -->
+      <div id="viewGrid">
+        <div class="row g-3" id="gradeCorpo"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/cesta.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script>
+  /* PÁGINA PRIVADA */
+  Auth.requireAuth();
+
+  // TODO: Substituir por ApiProdutos.listar()
+  const produtos      = [...MockData.produtos];
+  const fornecedores  = [...MockData.fornecedores];
+
+  const iconsCat = {
+    'Eletrônicos': '🖥️', 'Periféricos': '⌨️',
+    'Móveis': '🪑', 'Áudio': '🎧', 'default': '📦',
+  };
+
+  // ── Popular filtros ───────────────────────────────
+  function popularFiltros() {
+    const cats  = [...new Set(produtos.map(p => p.categoria))];
+    const forns = [...new Set(produtos.map(p => p.fornecedor))];
+
+    document.getElementById('filtroCategoria').innerHTML =
+      '<option value="">Todas</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+
+    document.getElementById('filtroFornecedor').innerHTML =
+      '<option value="">Todos</option>' + forns.map(f => `<option value="${f}">${f}</option>`).join('');
+  }
+
+  // ── Filtrar e ordenar ─────────────────────────────
+  function filtrar() {
+    const q    = document.getElementById('searchInput').value.toLowerCase();
+    const cat  = document.getElementById('filtroCategoria').value;
+    const forn = document.getElementById('filtroFornecedor').value;
+    const st   = document.getElementById('filtroStatus').value;
+    const ord  = document.getElementById('ordenar').value;
+
+    let lista = produtos.filter(p => {
+      const matchQ  = !q || p.nome.toLowerCase().includes(q) || p.categoria.toLowerCase().includes(q) ||
+                           p.fornecedor.toLowerCase().includes(q);
+      const matchCat = !cat  || p.categoria  === cat;
+      const matchF   = !forn || p.fornecedor === forn;
+      const matchS   = !st   || p.status     === st;
+      return matchQ && matchCat && matchF && matchS;
+    });
+
+    // Ordenação
+    if (ord === 'nome')       lista.sort((a, b) => a.nome.localeCompare(b.nome));
+    if (ord === 'preco_asc')  lista.sort((a, b) => a.preco - b.preco);
+    if (ord === 'preco_desc') lista.sort((a, b) => b.preco - a.preco);
+    if (ord === 'estoque')    lista.sort((a, b) => b.estoque - a.estoque);
+
+    document.getElementById('contagem').textContent = lista.length;
+    renderTabela(lista);
+    renderGrade(lista);
+  }
+
+  function limparFiltros() {
+    ['searchInput','filtroCategoria','filtroFornecedor','filtroStatus'].forEach(id => {
+      const el = document.getElementById(id);
+      el.value = '';
+    });
+    document.getElementById('ordenar').value = 'nome';
+    filtrar();
+  }
+
+  // ── Render tabela ─────────────────────────────────
+  function renderTabela(lista) {
+    const tbody = document.getElementById('tabelaCorpo');
+    if (!lista.length) {
+      tbody.innerHTML = `<tr><td colspan="8">
+        <div class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <h6>Nenhum produto encontrado</h6>
+          <p style="font-size:13px">Tente ajustar os filtros.</p>
+        </div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = lista.map(p => `
+      <tr>
+        <td style="color:var(--text-muted);font-size:12px">#${p.id}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;border-radius:8px;background:var(--bg);
+                        display:flex;align-items:center;justify-content:center;font-size:16px">
+              ${iconsCat[p.categoria] || iconsCat['default']}
+            </div>
+            <strong>${p.nome}</strong>
+          </div>
+        </td>
+        <td><span class="badge-custom info">${p.categoria}</span></td>
+        <td>${p.fornecedor}</td>
+        <td style="font-family:'Syne',sans-serif;font-weight:700;color:var(--emerald)">
+          ${Cesta.formataPreco(p.preco)}
+        </td>
+        <td>
+          ${p.estoque === 0
+            ? '<span class="badge-custom danger">Esgotado</span>'
+            : `<span style="font-weight:600">${p.estoque} un.</span>`}
+        </td>
+        <td>
+          <span class="badge-custom ${p.status === 'ativo' ? 'active' : 'danger'}">
+            ${p.status === 'ativo' ? 'Ativo' : 'Inativo'}
+          </span>
+        </td>
+        <td>
+          <div class="table-actions">
+            <button class="btn-icon" style="color:var(--emerald)" title="Adicionar à cesta"
+              onclick="adicionarCesta(${p.id})">🛒</button>
+            <a href="produtos.html" class="btn-icon edit" title="Editar">✏️</a>
+          </div>
+        </td>
+      </tr>`).join('');
+  }
+
+  // ── Render grade ──────────────────────────────────
+  function renderGrade(lista) {
+    const grid = document.getElementById('gradeCorpo');
+    if (!lista.length) {
+      grid.innerHTML = `<div class="col-12">
+        <div class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <h6>Nenhum produto encontrado</h6>
+        </div></div>`;
+      return;
+    }
+
+    grid.innerHTML = lista.map(p => `
+      <div class="col-sm-6 col-lg-4 col-xl-3">
+        <div class="product-card">
+          <div class="pc-header">
+            <div>
+              <div class="pc-name">${p.nome}</div>
+              <div class="pc-cat">${p.categoria} · ${p.fornecedor}</div>
+            </div>
+            <div class="pc-icon">${iconsCat[p.categoria] || iconsCat['default']}</div>
+          </div>
+          <div class="pc-price">${Cesta.formataPreco(p.preco)}</div>
+          <div class="pc-footer">
+            <div>
+              ${p.estoque === 0
+                ? '<span class="badge-custom danger">Esgotado</span>'
+                : `<span style="font-size:12px;color:var(--text-muted)">${p.estoque} em estoque</span>`}
+            </div>
+            <button class="btn-primary-custom" style="padding:7px 12px;font-size:12px"
+              onclick="adicionarCesta(${p.id})" ${p.estoque === 0 ? 'disabled style="opacity:.5"' : ''}>
+              🛒 Adicionar
+            </button>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  // ── Adicionar à cesta ─────────────────────────────
+  function adicionarCesta(id) {
+    const p = produtos.find(p => p.id === id);
+    if (!p) return;
+    if (p.estoque === 0) { showToast('Produto sem estoque!', 'error'); return; }
+    Cesta.adicionar(p);
+    showToast(`"${p.nome}" adicionado! <a href="cesta.html" style="color:var(--emerald-l)">Ver cesta →</a>`);
+  }
+
+  // ── Alternar vista ────────────────────────────────
+  function setView(mode) {
+    document.body.classList.toggle('grid-view', mode === 'grid');
+    document.getElementById('btnViewTable').style.background = mode === 'table' ? 'var(--bg)' : '';
+    document.getElementById('btnViewGrid').style.background  = mode === 'grid'  ? 'var(--bg)' : '';
+  }
+
+  // ── Init ──────────────────────────────────────────
+  popularFiltros();
+  filtrar();
+</script>
+</body>
+</html>
