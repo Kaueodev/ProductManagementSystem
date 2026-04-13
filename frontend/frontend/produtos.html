@@ -242,9 +242,24 @@
   Auth.requireAuth();
 
   // ── Estado local ──────────────────────────────────
-  let produtos      = [...MockData.produtos];
-  let fornecedores  = [...MockData.fornecedores];
+  let produtos      = [];
+  let fornecedores  = [];
   let deleteId      = null;
+
+  async function carregarDados() {
+    try {
+      const [resProd, resForn] = await Promise.all([
+        ApiProdutos.listar(),
+        ApiFornecedores.listar()
+      ]);
+      produtos = resProd.data || [];
+      fornecedores = resForn.data || [];
+      popularSelects();
+      renderTabela(produtos);
+    } catch (err) {
+      showToast('Erro ao carregar dados.', 'error');
+    }
+  }
 
   // ── Popular selects ───────────────────────────────
   function popularSelects() {
@@ -252,7 +267,7 @@
     const sel = document.getElementById('pFornecedor');
     sel.innerHTML = '<option value="">Selecione o fornecedor</option>' +
       fornecedores.filter(f => f.status === 'ativo').map(f =>
-        `<option value="${f.id}">${f.nome}</option>`).join('');
+        `<option value="${f.id_fornecedor}">${f.nome}</option>`).join('');
 
     // Select filtro categoria
     const cats = [...new Set(produtos.map(p => p.categoria))];
@@ -290,7 +305,7 @@
 
     tbody.innerHTML = dados.map(p => `
       <tr>
-        <td style="color:var(--text-muted);font-size:12px">#${p.id}</td>
+        <td style="color:var(--text-muted);font-size:12px">#${p.id_produto}</td>
         <td><strong>${p.nome}</strong></td>
         <td><span class="badge-custom info">${p.categoria}</span></td>
         <td style="font-size:13px">${p.fornecedor}</td>
@@ -309,10 +324,10 @@
         </td>
         <td>
           <div class="table-actions">
-            <button class="btn-icon edit" title="Editar" onclick="editarProduto(${p.id})">✏️</button>
-            <button class="btn-icon" title="Adicionar à cesta" onclick="adicionarCesta(${p.id})"
+            <button class="btn-icon edit" title="Editar" onclick="editarProduto(${p.id_produto})">✏️</button>
+            <button class="btn-icon" title="Adicionar à cesta" onclick="adicionarCesta(${p.id_produto})"
               style="color:var(--emerald)">🛒</button>
-            <button class="btn-icon del" title="Excluir" onclick="abrirDelete(${p.id},'${p.nome.replace(/'/g,"\\'")}')">🗑️</button>
+            <button class="btn-icon del" title="Excluir" onclick="abrirDelete(${p.id_produto},'${p.nome.replace(/'/g,"\\'")}')">🗑️</button>
           </div>
         </td>
       </tr>`).join('');
@@ -334,7 +349,7 @@
 
   // ── Adicionar à cesta ─────────────────────────────
   function adicionarCesta(id) {
-    const p = produtos.find(p => p.id === id);
+    const p = produtos.find(p => p.id_produto === id);
     if (!p) return;
     Cesta.adicionar(p);
     document.getElementById('cestaCount').textContent = Cesta.count();
@@ -351,10 +366,10 @@
 
     if (produto) {
       document.getElementById('modalTitulo').textContent = '✏️ Editar Produto';
-      document.getElementById('produtoId').value    = produto.id;
+      document.getElementById('produtoId').value    = produto.id_produto;
       document.getElementById('pNome').value        = produto.nome;
       document.getElementById('pCategoria').value   = produto.categoria;
-      document.getElementById('pFornecedor').value  = produto.fornecedor_id;
+      document.getElementById('pFornecedor').value  = produto.id_fornecedor;
       document.getElementById('pPreco').value       = produto.preco;
       document.getElementById('pEstoque').value     = produto.estoque;
       document.querySelector(`input[name="pStatus"][value="${produto.status}"]`).checked = true;
@@ -365,7 +380,7 @@
   }
 
   function editarProduto(id) {
-    const p = produtos.find(p => p.id === id);
+    const p = produtos.find(p => p.id_produto === id);
     if (p) abrirModal(p);
   }
 
@@ -390,40 +405,21 @@
     if (isNaN(estoque) || estoque < 0)    { document.getElementById('pEstoqueError').style.display = 'block';    valid = false; }
     if (!valid) return;
 
-    const fornecedor = fornecedores.find(f => f.id == fornId);
-    const dados = { nome, categoria, fornecedor_id: parseInt(fornId),
-                    fornecedor: fornecedor?.nome || '', preco, estoque, status };
+    const dados = { nome, categoria, id_fornecedor: parseInt(fornId), preco, estoque, status };
 
     const btn = document.getElementById('btnSalvarProduto');
     btn.innerHTML = '<span class="spinner"></span>';
     btn.disabled  = true;
 
     try {
-      /*
-       * TODO (backend real — AJAX):
-       * if (id) {
-       *   await ApiProdutos.atualizar(id, dados);
-       * } else {
-       *   const novo = await ApiProdutos.criar(dados);
-       * }
-       */
-
-      // ── Simulação ──────────────────────────────────
-      await new Promise(r => setTimeout(r, 600));
       if (id) {
-        const idx = produtos.findIndex(p => p.id == id);
-        produtos[idx] = { ...produtos[idx], ...dados };
+        await ApiProdutos.atualizar(id, dados);
       } else {
-        const newId = Math.max(...produtos.map(p => p.id), 0) + 1;
-        produtos.push({ id: newId, ...dados });
+        await ApiProdutos.criar(dados);
       }
-      // ───────────────────────────────────────────────
-
       bootstrap.Modal.getInstance(document.getElementById('modalProduto')).hide();
-      popularSelects();
-      renderTabela(produtos);
+      await carregarDados();
       showToast(id ? 'Produto atualizado!' : 'Produto cadastrado!');
-
     } catch (err) {
       showToast(err.message || 'Erro ao salvar.', 'error');
     } finally {
@@ -444,11 +440,9 @@
     btn.innerHTML = '<span class="spinner"></span>';
     btn.disabled  = true;
     try {
-      /* TODO: await ApiProdutos.deletar(deleteId); */
-      await new Promise(r => setTimeout(r, 500));
-      produtos = produtos.filter(p => p.id !== deleteId);
+      await ApiProdutos.deletar(deleteId);
       bootstrap.Modal.getInstance(document.getElementById('modalDelete')).hide();
-      renderTabela(produtos);
+      await carregarDados();
       showToast('Produto excluído.');
     } catch (err) {
       showToast(err.message || 'Erro ao excluir.', 'error');
@@ -460,8 +454,7 @@
   }
 
   // ── Init ──────────────────────────────────────────
-  popularSelects();
-  renderTabela(produtos);
+  carregarDados();
 </script>
 </body>
 </html>

@@ -15,7 +15,7 @@ const Auth = {
   isLoggedIn() {
     try {
       const session = JSON.parse(localStorage.getItem(this.STORAGE_KEY));
-      return !!(session && session.token && session.user);
+      return !!(session && session.user);
     } catch {
       return false;
     }
@@ -33,9 +33,9 @@ const Auth = {
 
   // ── Simula login (substituir por chamada real) ─────
   // TODO: POST /api/login → { token, user }
+  // Agora recebe os dados reais do backend (usuarios.php)
   login(userData) {
     const session = {
-      token: 'mock_token_' + Date.now(), // substituir pelo JWT do backend
       user: userData,
       loginAt: new Date().toISOString(),
     };
@@ -43,9 +43,13 @@ const Auth = {
   },
 
   // ── Logout ────────────────────────────────────────
-  logout() {
+  async logout() {
+    try {
+      await ApiAuth.logout();
+    } catch (err) {
+      console.error('Erro ao encerrar sessão no servidor:', err);
+    }
     localStorage.removeItem(this.STORAGE_KEY);
-    // TODO: POST /api/logout para invalidar token no backend
     window.location.href = 'index.html';
   },
 

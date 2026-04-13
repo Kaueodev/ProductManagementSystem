@@ -219,15 +219,11 @@
     document.getElementById('cadastroSuccess').style.display = 'none';
 
     try {
-      /*
-       * TODO (backend real):
-       * await ApiAuth.cadastrar(nome, email, senha);
-       * // Backend fará: validação → hash SHA-256 → INSERT INTO usuarios
-       */
-
-      // ── Simulação (remover após integração) ──────────────
-      await new Promise(r => setTimeout(r, 900));
-      // ────────────────────────────────────────────────────
+      
+      // TODO (backend real):
+      await ApiAuth.cadastrar(nome, email, senha);
+      // Backend fará: validação → hash SHA-256 → INSERT INTO usuarios
+       
 
       document.getElementById('cadastroSuccess').style.display = 'block';
       this.reset();

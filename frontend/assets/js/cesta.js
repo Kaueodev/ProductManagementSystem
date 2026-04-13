@@ -55,7 +55,8 @@ const Cesta = {
   // ── Mutações ───────────────────────────────────────
   adicionar(produto) {
     const items = this._load();
-    const idx   = items.findIndex(i => i.id === produto.id);
+    const pId   = produto.id_produto || produto.id;
+    const idx   = items.findIndex(i => (i.id_produto || i.id) === pId);
 
     if (idx >= 0) {
       items[idx].qty += 1;
@@ -68,7 +69,7 @@ const Cesta = {
   },
 
   remover(id) {
-    const items = this._load().filter(i => i.id !== id);
+    const items = this._load().filter(i => (i.id_produto || i.id) !== id);
     this._save(items);
     return items;
   },
@@ -76,7 +77,7 @@ const Cesta = {
   alterarQty(id, qty) {
     if (qty < 1) return this.remover(id);
     const items = this._load();
-    const idx   = items.findIndex(i => i.id === id);
+    const idx   = items.findIndex(i => (i.id_produto || i.id) === id);
     if (idx >= 0) { items[idx].qty = qty; this._save(items); }
     return items;
   },

@@ -59,86 +59,68 @@ async function apiFetch(endpoint, options = {}) {
 
 // ── Auth ───────────────────────────────────────────────
 const ApiAuth = {
-  /**
-   * POST /api/login
-   * Body: { email, senha }
-   * Returns: { token, user }
-   */
   async login(email, senha) {
-    return apiFetch('/login', {
+    return apiFetch('/usuarios.php', {
       method: 'POST',
-      body: JSON.stringify({ email, senha }),
+      body: JSON.stringify({ action: 'login', email, senha }),
     });
   },
 
-  /**
-   * POST /api/usuarios
-   * Body: { nome, email, senha }
-   * Returns: { id, nome, email }
-   */
   async cadastrar(nome, email, senha) {
-    return apiFetch('/usuarios', {
+    return apiFetch('/usuarios.php', {
       method: 'POST',
-      body: JSON.stringify({ nome, email, senha }),
+      body: JSON.stringify({ action: 'cadastrar', nome, email, senha }),
     });
   },
 };
 
 // ── Fornecedores ───────────────────────────────────────
 const ApiFornecedores = {
-  /** GET /api/fornecedores */
   async listar() {
-    return apiFetch('/fornecedores');
+    return apiFetch('/fornecedores.php');
   },
 
-  /** POST /api/fornecedores */
   async criar(dados) {
-    return apiFetch('/fornecedores', {
+    return apiFetch('/fornecedores.php', {
       method: 'POST',
       body: JSON.stringify(dados),
     });
   },
 
-  /** PUT /api/fornecedores/:id */
   async atualizar(id, dados) {
-    return apiFetch(`/fornecedores/${id}`, {
+    return apiFetch(`/fornecedores.php/${id}`, {
       method: 'PUT',
       body: JSON.stringify(dados),
     });
   },
 
-  /** DELETE /api/fornecedores/:id */
   async deletar(id) {
-    return apiFetch(`/fornecedores/${id}`, { method: 'DELETE' });
+    return apiFetch(`/fornecedores.php/${id}`, { method: 'DELETE' });
   },
 };
 
 // ── Produtos ───────────────────────────────────────────
 const ApiProdutos = {
-  /** GET /api/produtos */
   async listar() {
-    return apiFetch('/produtos');
+    return apiFetch('/produtos.php');
   },
 
-  /** POST /api/produtos */
   async criar(dados) {
-    return apiFetch('/produtos', {
+    return apiFetch('/produtos.php', {
       method: 'POST',
       body: JSON.stringify(dados),
     });
   },
 
-  /** PUT /api/produtos/:id */
   async atualizar(id, dados) {
-    return apiFetch(`/produtos/${id}`, {
+    return apiFetch(`/produtos.php/${id}`, {
       method: 'PUT',
       body: JSON.stringify(dados),
     });
   },
 
-  /** DELETE /api/produtos/:id */
   async deletar(id) {
-    return apiFetch(`/produtos/${id}`, { method: 'DELETE' });
+    return apiFetch(`/produtos.php/${id}`, { method: 'DELETE' });
   },
 };
 

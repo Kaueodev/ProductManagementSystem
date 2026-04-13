@@ -196,9 +196,18 @@
   Auth.requireAuth();
 
   // ── Estado local ──────────────────────────────────
-  // Em produção, buscar via ApiFornecedores.listar()
-  let fornecedores = [...MockData.fornecedores];
+  let fornecedores = [];
   let deleteId     = null;
+
+  async function carregarFornecedores() {
+    try {
+      const res = await ApiFornecedores.listar();
+      fornecedores = res.data || [];
+      renderTabela(fornecedores);
+    } catch (err) {
+      showToast(err.message || 'Erro ao carregar fornecedores.', 'error');
+    }
+  }
 
   // ── Render da tabela ──────────────────────────────
   function renderTabela(dados) {
@@ -213,8 +222,8 @@
         </div></td></tr>`;
     } else {
       tbody.innerHTML = dados.map(f => `
-        <tr data-id="${f.id}" data-nome="${f.nome.toLowerCase()}" data-status="${f.status}">
-          <td style="color:var(--text-muted);font-size:12px">#${f.id}</td>
+        <tr data-id="${f.id_fornecedor}" data-nome="${f.nome.toLowerCase()}" data-status="${f.status}">
+          <td style="color:var(--text-muted);font-size:12px">#${f.id_fornecedor}</td>
           <td><strong>${f.nome}</strong></td>
           <td style="font-family:monospace;font-size:13px">${f.cnpj}</td>
           <td>${f.contato}</td>
@@ -226,8 +235,8 @@
           </td>
           <td>
             <div class="table-actions">
-              <button class="btn-icon edit" title="Editar" onclick="editarFornecedor(${f.id})">✏️</button>
-              <button class="btn-icon del"  title="Excluir" onclick="abrirDelete(${f.id}, '${f.nome}')">🗑️</button>
+              <button class="btn-icon edit" title="Editar" onclick="editarFornecedor(${f.id_fornecedor})">✏️</button>
+              <button class="btn-icon del"  title="Excluir" onclick="abrirDelete(${f.id_fornecedor}, '${f.nome}')">🗑️</button>
             </div>
           </td>
         </tr>`).join('');
@@ -258,7 +267,7 @@
 
     if (fornecedor) {
       document.getElementById('modalTitulo').textContent = '✏️ Editar Fornecedor';
-      document.getElementById('fornecedorId').value = fornecedor.id;
+      document.getElementById('fornecedorId').value = fornecedor.id_fornecedor;
       document.getElementById('fNome').value        = fornecedor.nome;
       document.getElementById('fCnpj').value        = fornecedor.cnpj;
       document.getElementById('fContato').value     = fornecedor.contato;
@@ -271,7 +280,7 @@
   }
 
   function editarFornecedor(id) {
-    const f = fornecedores.find(f => f.id === id);
+    const f = fornecedores.find(f => f.id_fornecedor === id);
     if (f) abrirModal(f);
   }
 
@@ -279,7 +288,7 @@
   async function salvarFornecedor() {
     const id      = document.getElementById('fornecedorId').value;
     const nome    = document.getElementById('fNome').value.trim();
-    const cnpj    = document.getElementById('fCnpj').value.trim();
+    const cnpjRaw = document.getElementById('fCnpj').value.replace(/\D/g, '');
     const contato = document.getElementById('fContato').value.trim();
     const tel     = document.getElementById('fTelefone').value.trim();
     const status  = document.querySelector('input[name="fStatus"]:checked').value;
@@ -290,7 +299,7 @@
     document.getElementById('fContatoError').style.display = 'none';
 
     if (!nome) { document.getElementById('fNomeError').style.display    = 'block'; valid = false; }
-    if (!cnpj || cnpj.length < 14) { document.getElementById('fCnpjError').style.display = 'block'; valid = false; }
+    if (!cnpjRaw || cnpjRaw.length < 14) { document.getElementById('fCnpjError').style.display = 'block'; valid = false; }
     if (!contato || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contato)) {
       document.getElementById('fContatoError').style.display = 'block'; valid = false;
     }
@@ -300,35 +309,17 @@
     btn.innerHTML = '<span class="spinner"></span>';
     btn.disabled  = true;
 
-    const dados = { nome, cnpj, contato, telefone: tel, status };
+    const dados = { nome, cnpj: cnpjRaw, contato, telefone: tel, status };
 
     try {
-      /*
-       * TODO (backend real — AJAX):
-       * if (id) {
-       *   const atualizado = await ApiFornecedores.atualizar(id, dados);
-       * } else {
-       *   const novo = await ApiFornecedores.criar(dados);
-       * }
-       * // Backend: INSERT INTO fornecedores / UPDATE fornecedores
-       * // Retorna o registro atualizado, front atualiza tabela sem recarregar
-       */
-
-      // ── Simulação ──────────────────────────────────
-      await new Promise(r => setTimeout(r, 600));
       if (id) {
-        const idx = fornecedores.findIndex(f => f.id == id);
-        fornecedores[idx] = { ...fornecedores[idx], ...dados };
+        await ApiFornecedores.atualizar(id, dados);
       } else {
-        const newId = Math.max(...fornecedores.map(f => f.id), 0) + 1;
-        fornecedores.push({ id: newId, ...dados });
+        await ApiFornecedores.criar(dados);
       }
-      // ───────────────────────────────────────────────
-
       bootstrap.Modal.getInstance(document.getElementById('modalFornecedor')).hide();
-      renderTabela(fornecedores);
+      await carregarFornecedores();
       showToast(id ? 'Fornecedor atualizado!' : 'Fornecedor cadastrado com sucesso!');
-
     } catch (err) {
       showToast(err.message || 'Erro ao salvar.', 'error');
     } finally {
@@ -350,17 +341,10 @@
     btn.disabled  = true;
 
     try {
-      /*
-       * TODO (backend real):
-       * await ApiFornecedores.deletar(deleteId);
-       * // Backend: DELETE FROM fornecedores WHERE id = ?
-       */
-      await new Promise(r => setTimeout(r, 500));
-      fornecedores = fornecedores.filter(f => f.id !== deleteId);
-      // ───────────────────────────────────────────────
+      await ApiFornecedores.deletar(deleteId);
 
       bootstrap.Modal.getInstance(document.getElementById('modalDelete')).hide();
-      renderTabela(fornecedores);
+      await carregarFornecedores();
       showToast('Fornecedor excluído.');
 
     } catch (err) {
@@ -390,8 +374,7 @@
   }
 
   // ── Init ──────────────────────────────────────────
-  // TODO: Substituir por await ApiFornecedores.listar();
-  renderTabela(fornecedores);
+  carregarFornecedores();
 </script>
 </body>
 </html>

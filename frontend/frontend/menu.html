@@ -221,14 +221,13 @@
   }
 
   // Carrega estatísticas e tabela (usando MockData enquanto backend não está pronto)
-  function carregarDashboard() {
-    /*
-     * TODO (backend real):
-     * const fornecedores = await ApiFornecedores.listar();
-     * const produtos      = await ApiProdutos.listar();
-     */
-    const fornecedores = MockData.fornecedores;
-    const produtos     = MockData.produtos;
+  async function carregarDashboard() {
+    
+    const resForn = await ApiFornecedores.listar();
+    const resProd = await ApiProdutos.listar();
+
+    const fornecedores = resForn.data || [];
+    const produtos     = resProd.data || [];
     const cesta        = Cesta.getAll();
 
     document.getElementById('statFornecedores').textContent = fornecedores.filter(f => f.status === 'ativo').length;

@@ -180,21 +180,24 @@
       return;
     }
 
-    body.innerHTML = itens.map(item => `
-      <div class="cesta-item" id="item-${item.id}">
+    body.innerHTML = itens.map(item => {
+      const pId = item.id_produto || item.id;
+      return `
+      <div class="cesta-item" id="item-${pId}">
         <div class="cesta-thumb">${getEmoji(item.categoria)}</div>
         <div style="flex:1;min-width:0">
           <div class="cesta-item-name">${item.nome}</div>
           <div class="cesta-item-sub">${item.categoria} · ${item.fornecedor}</div>
         </div>
         <div class="qty-control">
-          <button class="qty-btn" onclick="alterarQty(${item.id}, ${item.qty - 1})">−</button>
+          <button class="qty-btn" onclick="alterarQty(${pId}, ${item.qty - 1})">−</button>
           <span class="qty-value">${item.qty}</span>
-          <button class="qty-btn" onclick="alterarQty(${item.id}, ${item.qty + 1})">+</button>
+          <button class="qty-btn" onclick="alterarQty(${pId}, ${item.qty + 1})">+</button>
         </div>
         <div class="cesta-price">${Cesta.formataPreco(item.preco * item.qty)}</div>
-        <button class="btn-icon del" title="Remover" onclick="removerItem(${item.id})">✕</button>
-      </div>`).join('');
+        <button class="btn-icon del" title="Remover" onclick="removerItem(${pId})">✕</button>
+      </div>`;
+    }).join('');
 
     atualizarTotais(itens);
     atualizarResumoCat(itens);
@@ -270,15 +273,16 @@
     new bootstrap.Modal(document.getElementById('modalFinalizar')).show();
   }
 
-  function confirmarPedido() {
-    /*
-     * TODO (backend real):
-     * const pedido = {
-     *   itens: Cesta.getAll(),
-     *   total: Cesta.total(),
-     * };
-     * await apiFetch('/pedidos', { method: 'POST', body: JSON.stringify(pedido) });
-     */
+  async function confirmarPedido() {
+    
+     // TODO (backend real):
+    const pedido = {
+      itens: Cesta.getAll(),
+      total: Cesta.total(),
+    };
+
+    await apiFetch('/pedidos', { method: 'POST', body: JSON.stringify(pedido) });
+     
 
     bootstrap.Modal.getInstance(document.getElementById('modalFinalizar')).hide();
     Cesta.limpar();

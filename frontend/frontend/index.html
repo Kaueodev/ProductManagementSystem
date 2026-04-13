@@ -126,24 +126,11 @@
     document.getElementById('loginAlert').style.display = 'none';
 
     try {
-      /*
-       * TODO (backend real):
-       * const data = await ApiAuth.login(email, senha);
-       * Auth.login(data.user);
-       * window.location.href = 'menu.html';
-       */
-
-      // ── Simulação de login (remover após integração) ──────
-      await new Promise(r => setTimeout(r, 800)); // simula latência
-
-      if (email === 'admin@gestprod.com' && senha === '123456') {
-        Auth.login({ nome: 'Administrador', email });
-        window.location.href = 'menu.html';
-      } else {
-        throw new Error('Credenciais inválidas');
-      }
-      // ─────────────────────────────────────────────────────
-
+      
+      const data = await ApiAuth.login(email, senha);
+      Auth.login(data.data);
+      window.location.href = 'menu.html';
+      
     } catch (err) {
       document.getElementById('loginAlert').style.display = 'block';
       document.getElementById('loginAlertMsg').textContent = err.message || 'Erro ao fazer login.';

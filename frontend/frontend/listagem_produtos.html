@@ -177,9 +177,18 @@
   /* PÁGINA PRIVADA */
   Auth.requireAuth();
 
-  // TODO: Substituir por ApiProdutos.listar()
-  const produtos      = [...MockData.produtos];
-  const fornecedores  = [...MockData.fornecedores];
+  let produtos = [];
+
+  async function carregarProdutos() {
+    try {
+      const res = await ApiProdutos.listar();
+      produtos = res.data || [];
+      popularFiltros();
+      filtrar();
+    } catch (err) {
+      showToast('Erro ao carregar produtos.', 'error');
+    }
+  }
 
   const iconsCat = {
     'Eletrônicos': '🖥️', 'Periféricos': '⌨️',
@@ -250,12 +259,12 @@
 
     tbody.innerHTML = lista.map(p => `
       <tr>
-        <td style="color:var(--text-muted);font-size:12px">#${p.id}</td>
+        <td style="color:var(--text-muted);font-size:12px">#${p.id_produto}</td>
         <td>
           <div style="display:flex;align-items:center;gap:10px">
             <div style="width:36px;height:36px;border-radius:8px;background:var(--bg);
                         display:flex;align-items:center;justify-content:center;font-size:16px">
-              ${iconsCat[p.categoria] || iconsCat['default']}
+              ${iconsCat[p.categoria.trim()] || iconsCat['default']}
             </div>
             <strong>${p.nome}</strong>
           </div>
@@ -278,7 +287,7 @@
         <td>
           <div class="table-actions">
             <button class="btn-icon" style="color:var(--emerald)" title="Adicionar à cesta"
-              onclick="adicionarCesta(${p.id})">🛒</button>
+              onclick="adicionarCesta(${p.id_produto})">🛒</button>
             <a href="produtos.html" class="btn-icon edit" title="Editar">✏️</a>
           </div>
         </td>
@@ -305,7 +314,7 @@
               <div class="pc-name">${p.nome}</div>
               <div class="pc-cat">${p.categoria} · ${p.fornecedor}</div>
             </div>
-            <div class="pc-icon">${iconsCat[p.categoria] || iconsCat['default']}</div>
+            <div class="pc-icon">${iconsCat[p.categoria.trim()] || iconsCat['default']}</div>
           </div>
           <div class="pc-price">${Cesta.formataPreco(p.preco)}</div>
           <div class="pc-footer">
@@ -315,7 +324,7 @@
                 : `<span style="font-size:12px;color:var(--text-muted)">${p.estoque} em estoque</span>`}
             </div>
             <button class="btn-primary-custom" style="padding:7px 12px;font-size:12px"
-              onclick="adicionarCesta(${p.id})" ${p.estoque === 0 ? 'disabled style="opacity:.5"' : ''}>
+              onclick="adicionarCesta(${p.id_produto})" ${p.estoque === 0 ? 'disabled style="opacity:.5"' : ''}>
               🛒 Adicionar
             </button>
           </div>
@@ -325,7 +334,7 @@
 
   // ── Adicionar à cesta ─────────────────────────────
   function adicionarCesta(id) {
-    const p = produtos.find(p => p.id === id);
+    const p = produtos.find(p => p.id_produto === id);
     if (!p) return;
     if (p.estoque === 0) { showToast('Produto sem estoque!', 'error'); return; }
     Cesta.adicionar(p);
@@ -340,8 +349,7 @@
   }
 
   // ── Init ──────────────────────────────────────────
-  popularFiltros();
-  filtrar();
+  carregarProdutos();
 </script>
 </body>
 </html>
